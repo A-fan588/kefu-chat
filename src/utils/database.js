@@ -23,7 +23,7 @@ const initDatabase = async () => {
 };
 
 const getDb = () => {
-  // 确保持有 .data 属性
+  // 确保 .data 存在
   if (!db.data) {
     db.data = defaultData;
     db.write();
