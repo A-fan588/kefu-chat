@@ -1,0 +1,8 @@
+node_modules/
+db.json
+sessions/
+logs/
+public/uploads/*
+.env
+.DS_Store
+*.log

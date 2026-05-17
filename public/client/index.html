@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线客服</title>
+    <link rel="stylesheet" href="client-responsive.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .chat-container {
+            width: 100%;
+            max-width: 600px;
+            height: 100vh;
+            max-height: 900px;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        @media (min-width: 600px) {
+            .chat-container {
+                height: 90vh;
+                border-radius: 12px;
+                overflow: hidden;
+            }
+        }
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .chat-header img {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #fff;
+        }
+        .chat-header .title {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .chat-header .status {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .message {
+            margin-bottom: 16px;
+            display: flex;
+            align-items: flex-start;
+        }
+        .message.customer {
+            justify-content: flex-end;
+        }
+        .message:not(.customer) {
+            justify-content: flex-start;
+        }
+        .message img.avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            background: #ccc;
+        }
+        .message.customer img.avatar {
+            margin-left: 10px;
+        }
+        .message:not(.customer) img.avatar {
+            margin-right: 10px;
+        }
+        .message .msg-content {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-width: 70%;
+        }
+        .message .bubble {
+            padding: 10px 14px;
+            background: #fff;
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.5;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .message:not(.customer) .bubble {
+            border-radius: 0 10px 10px 10px;
+        }
+        .message.customer .bubble {
+            background: #07c160;
+            color: #fff;
+            border-radius: 10px 0 10px 10px;
+        }
+        .message:not(.customer) .bubble::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 0;
+            width: 0;
+            height: 0;
+            border-top: 0 solid transparent;
+            border-bottom: 10px solid transparent;
+            border-right: 10px solid #fff;
+        }
+        .message.customer .bubble::before {
+            content: '';
+            position: absolute;
+            right: -6px;
+            top: 0;
+            width: 0;
+            height: 0;
+            border-top: 0 solid transparent;
+            border-bottom: 10px solid transparent;
+            border-left: 10px solid #07c160;
+        }
+        .message .media-image {
+            max-width: 100%;
+            max-height: 280px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: block;
+            margin-top: 4px;
+        }
+        .message .media-video {
+            max-width: 100%;
+            max-height: 280px;
+            border-radius: 6px;
+            display: block;
+            margin-top: 4px;
+        }
+        .message .file-link {
+            margin-top: 6px;
+        }
+        .message:not(.customer) .file-link a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #576b95;
+            text-decoration: none;
+            padding: 6px 10px;
+            background: #f5f7fa;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .message.customer .file-link a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #fff;
+            text-decoration: none;
+            padding: 6px 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .typing-indicator {
+            padding: 12px 16px;
+            background: #fff;
+            border-radius: 16px;
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+        }
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: #999;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-8px); }
+        }
+        .chat-input {
+            padding: 16px;
+            background: #fff;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+        .chat-input textarea {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            padding: 12px 16px;
+            resize: none;
+            font-size: 14px;
+            outline: none;
+            max-height: 120px;
+        }
+        .chat-input textarea:focus {
+            border-color: #667eea;
+        }
+        .chat-input button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .chat-input button:hover {
+            opacity: 0.9;
+        }
+        .quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #fafafa;
+            border-top: 1px solid #eee;
+        }
+        .quick-reply {
+            padding: 6px 12px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 16px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .quick-reply:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=客服" id="agentAvatar">
+            <div>
+                <div class="title">在线客服</div>
+                <div class="status" id="statusText">正在连接...</div>
+            </div>
+        </div>
+        <div class="chat-messages" id="messages"></div>
+        <div class="quick-replies">
+            <span class="quick-reply" data-text="1">1⃣ X(之前的蓝🕊)</span>
+            <span class="quick-reply" data-text="2">2⃣📜✈(𝗧𝗴也叫⚡️报)</span>
+            <span class="quick-reply" data-text="3">3⃣古哥</span>
+            <span class="quick-reply" data-text="4">4⃣加速器</span>
+            <span class="quick-reply" data-text="5">5⃣其它</span>
+        </div>
+        <div class="chat-input">
+            <input type="file" id="photoInput" accept="image/*" style="display:none;" onchange="handleFileUpload(event, 'image')">
+            <input type="file" id="fileInput" accept="video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar,.7z" style="display:none;" onchange="handleFileUpload(event, 'file')">
+            <button style="background:#f5f5f5;color:#666;border-radius:50%;width:44px;height:44px;font-size:18px;" onclick="document.getElementById('photoInput').click()">📷</button>
+            <button style="background:#f5f5f5;color:#666;border-radius:50%;width:44px;height:44px;font-size:18px;" onclick="document.getElementById('fileInput').click()">📎</button>
+            <textarea id="messageInput" placeholder="输入消息..." rows="1"></textarea>
+            <button onclick="sendMessage()">→</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let uid = localStorage.getItem('kefu_uid');
+        if (!uid) {
+            uid = 'c_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('kefu_uid', uid);
+        }
+
+        const socket = io({ query: { type: 'customer', uid } });
+        let customer = null;
+
+        const messagesEl = document.getElementById('messages');
+        const messageInput = document.getElementById('messageInput');
+        const statusText = document.getElementById('statusText');
+        const agentAvatar = document.getElementById('agentAvatar');
+
+        socket.on('connect', () => {
+            statusText.textContent = '在线';
+        });
+
+        socket.on('disconnect', () => {
+            statusText.textContent = '离线';
+        });
+
+        socket.on('init', (data) => {
+            customer = data.customer;
+            data.messages.forEach(msg => addMessage(msg));
+        });
+
+        socket.on('message', (msg) => {
+            addMessage(msg);
+        });
+
+        socket.on('typing:update', (data) => {
+            if (data.from === 'agent') {
+                showTypingIndicator(data.isTyping);
+            }
+        });
+
+        function addMessage(msg) {
+            const el = document.createElement('div');
+            const isCustomer = msg.is_from_customer === 1 || msg.is_from_customer === true;
+            el.className = 'message ' + (isCustomer ? 'customer' : '');
+            let content = '';
+            if (msg.message_type === 'image') {
+                content = `<img class="media-image" src="${msg.file_url}" onclick="openMedia('${msg.file_url}')">`;
+            } else if (msg.message_type === 'video') {
+                content = `<video class="media-video" src="${msg.file_url}" controls></video>`;
+            } else if (msg.message_type === 'file') {
+                content = `<div class="file-link"><a href="${msg.file_url}" target="_blank" download="${msg.content}">📎 ${msg.content}</a></div>`;
+            } else {
+                content = msg.content;
+            }
+            el.innerHTML = `
+                <img class="avatar" src="${isCustomer ? customer.avatar : agentAvatar.src}">
+                <div class="msg-content">
+                    <div class="bubble">${content}</div>
+                </div>
+            `;
+            messagesEl.appendChild(el);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function openMedia(url) {
+            const win = window.open(url, '_blank');
+            if (win) win.focus();
+        }
+
+        let typingTimeout;
+        function showTypingIndicator(show) {
+            let indicator = document.getElementById('typingIndicator');
+            if (show && !indicator) {
+                indicator = document.createElement('div');
+                indicator.id = 'typingIndicator';
+                indicator.className = 'message';
+                indicator.innerHTML = `
+                    <img class="avatar" src="${agentAvatar.src}">
+                    <div class="typing-indicator"><span></span><span></span><span></span></div>
+                `;
+                messagesEl.appendChild(indicator);
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+            } else if (!show && indicator) {
+                indicator.remove();
+            }
+        }
+
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text) return;
+            socket.emit('message', { content: text });
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+        }
+
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        messageInput.addEventListener('input', () => {
+            messageInput.style.height = 'auto';
+            messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
+            socket.emit('typing', true);
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => socket.emit('typing', false), 1000);
+        });
+
+        document.querySelectorAll('.quick-reply').forEach(el => {
+            el.addEventListener('click', () => {
+                messageInput.value = el.dataset.text;
+                sendMessage();
+            });
+        });
+
+        async function handleFileUpload(e, expectedType) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('file', file);
+            try {
+                const res = await fetch('/api/customer/upload', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.url) {
+                    let type = 'file';
+                    if (expectedType === 'image' || data.type.startsWith('image')) {
+                        type = 'image';
+                    } else if (expectedType === 'file' && data.type.startsWith('video')) {
+                        type = 'video';
+                    }
+                    socket.emit('message', { content: type === 'image' ? '' : file.name, message_type: type, file_url: data.url });
+                }
+            } catch (err) {
+                alert('上传失败');
+            }
+            e.target.value = '';
+        }
+    </script>
+</body>
+</html>
