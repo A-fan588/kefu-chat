@@ -17,6 +17,8 @@ router.post('/register', strictLimiter, async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ error: '用户名已存在' });
     }
+    // 第一个注册的用户自动成为管理员
+    const isFirstUser = db.data.users.length === 0;
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = {
       id: Date.now().toString(),
@@ -25,12 +27,13 @@ router.post('/register', strictLimiter, async (req, res) => {
       nickname,
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
       online: 0,
+      role: isFirstUser ? 'admin' : 'agent',
       created_at: new Date().toISOString()
     };
     db.data.users.push(user);
     await db.write();
     await logAction('register', user.id, null, req.ip);
-    res.json({ success: true, message: '注册成功' });
+    res.json({ success: true, message: isFirstUser ? '注册成功（管理员）' : '注册成功（客服）' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: '服务器错误' });
