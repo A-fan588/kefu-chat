@@ -313,27 +313,32 @@
         });
 
         function addMessage(msg) {
-            const el = document.createElement('div');
-            const isCustomer = msg.is_from_customer === 1 || msg.is_from_customer === true;
-            el.className = 'message ' + (isCustomer ? 'customer' : '');
-            let content = '';
-            if (msg.message_type === 'image') {
-                content = `<img class="media-image" src="${msg.file_url}" onclick="openMedia('${msg.file_url}')">`;
-            } else if (msg.message_type === 'video') {
-                content = `<video class="media-video" src="${msg.file_url}" controls></video>`;
-            } else if (msg.message_type === 'file') {
-                content = `<div class="file-link"><a href="${msg.file_url}" target="_blank" download="${msg.content}">📎 ${msg.content}</a></div>`;
-            } else {
-                content = msg.content;
+            try {
+                const el = document.createElement('div');
+                const isCustomer = msg.is_from_customer === 1 || msg.is_from_customer === true;
+                el.className = 'message ' + (isCustomer ? 'customer' : '');
+                let content = '';
+                if (msg.message_type === 'image') {
+                    content = `<img class="media-image" src="${msg.file_url}" onclick="openMedia('${msg.file_url}')">`;
+                } else if (msg.message_type === 'video') {
+                    content = `<video class="media-video" src="${msg.file_url}" controls></video>`;
+                } else if (msg.message_type === 'file') {
+                    content = `<div class="file-link"><a href="${msg.file_url}" target="_blank" download="${msg.content}">📎 ${msg.content}</a></div>`;
+                } else {
+                    content = msg.content || '';
+                }
+                const avatarSrc = isCustomer && customer && customer.avatar ? customer.avatar : agentAvatar.src;
+                el.innerHTML = `
+                    <img class="avatar" src="${avatarSrc}">
+                    <div class="msg-content">
+                        <div class="bubble">${content}</div>
+                    </div>
+                `;
+                messagesEl.appendChild(el);
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+            } catch (err) {
+                console.error('addMessage error:', err, msg);
             }
-            el.innerHTML = `
-                <img class="avatar" src="${isCustomer ? customer.avatar : agentAvatar.src}">
-                <div class="msg-content">
-                    <div class="bubble">${content}</div>
-                </div>
-            `;
-            messagesEl.appendChild(el);
-            messagesEl.scrollTop = messagesEl.scrollHeight;
         }
 
         function openMedia(url) {
@@ -362,6 +367,14 @@
         function sendMessage() {
             const text = messageInput.value.trim();
             if (!text) return;
+            // 立即在本地显示消息（乐观更新）
+            addMessage({
+                id: 'local_' + Date.now(),
+                content: text,
+                message_type: 'text',
+                is_from_customer: 1,
+                created_at: new Date().toISOString()
+            });
             socket.emit('message', { content: text });
             messageInput.value = '';
             messageInput.style.height = 'auto';
