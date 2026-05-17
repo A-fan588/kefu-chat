@@ -13,21 +13,21 @@ const defaultData = {
 };
 
 const adapter = new JSONFile(dbPath);
-const db = new Low(adapter, defaultData);
-
-let dbReady = false;
+const db = new Low(adapter);
 
 const initDatabase = async () => {
   await db.read();
-  db.data = db.data || defaultData;
-  await db.write();
-  dbReady = true;
+  if (!db.data) {
+    db.data = defaultData;
+    await db.write();
+  }
   return db;
 };
 
 const getDb = () => {
-  if (!dbReady) {
-    throw new Error('Database not initialized');
+  if (!db.data) {
+    db.data = defaultData;
+    db.write().catch(() => {});
   }
   return db;
 };
