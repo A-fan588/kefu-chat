@@ -34,6 +34,10 @@
             border: 1px solid #ddd;
             border-radius: 8px;
             font-size: 14px;
+            pointer-events: auto !important;
+            cursor: text !important;
+            position: relative;
+            z-index: 1;
         }
         .auth-box button {
             width: 100%;
@@ -580,7 +584,7 @@
         <div class="auth-box">
             <h2 id="authTitle">登录</h2>
             <input type="text" id="username" placeholder="用户名">
-            <input type="password" id="password" placeholder="密码">
+            <input type="password" id="password" placeholder="密码" onclick="this.focus()">
             <input type="text" id="nickname" placeholder="昵称" style="display:none;">
             <button onclick="handleAuth()" id="authBtn">登录</button>
             <div class="toggle" onclick="toggleAuth()">没有账号？点击注册</div>
